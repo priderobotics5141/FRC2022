@@ -19,6 +19,8 @@ public class SwerveAngle {
     double angleWrapTimesNav;
     double currentAngleWrappedNav;
 
+    public static boolean navTog;
+
 
     
     public void calc(double x, double y, TalonSRX motor, AHRS navX) { //inputs must be gamePad.get{left or right}x/y();
@@ -35,27 +37,23 @@ public class SwerveAngle {
     SmartDashboard.putNumber("current angle wrapped" + motor.getDeviceID(), currentAngleWrapped);
     
     lastAngle = currentAngle;
-
-    currentAngleNav = -navX.getYaw();
-    SmartDashboard.putNumber("Current Angle", currentAngle);
-    if (lastAngleNav > 90 && currentAngleNav < -90) {
-      angleWrapTimesNav++;
+    if(navTog) {
+      currentAngleNav = -navX.getYaw();
+      SmartDashboard.putNumber("Current Angle", currentAngle);
+      if (lastAngleNav > 90 && currentAngleNav < -90) {
+        angleWrapTimesNav++;
+      }
+      if (lastAngleNav < -90 && currentAngleNav > 90) {
+        angleWrapTimesNav--;
+      }
+      currentAngleWrappedNav = currentAngleNav + angleWrapTimesNav * 360;
+      SmartDashboard.putNumber("current nav angle wrapped" + motor.getDeviceID(), currentAngleWrappedNav);
+      
+      lastAngleNav = currentAngleNav;
+      motor.set(TalonSRXControlMode.MotionMagic, (currentAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0));
+    } else {
+      motor.set(TalonSRXControlMode.MotionMagic, currentAngleWrapped * (1024.0/360.0));
     }
-    if (lastAngleNav < -90 && currentAngleNav > 90) {
-      angleWrapTimesNav--;
-    }
-    currentAngleWrappedNav = currentAngleNav + angleWrapTimesNav * 360;
-    SmartDashboard.putNumber("current nav angle wrapped" + motor.getDeviceID(), currentAngleWrappedNav);
-    
-    lastAngleNav = currentAngleNav;
-
-
-
-
-
-
-
-    motor.set(TalonSRXControlMode.MotionMagic, (currentAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0));
 
   }
     

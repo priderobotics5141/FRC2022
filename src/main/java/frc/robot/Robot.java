@@ -33,8 +33,8 @@ public class Robot extends TimedRobot {
   TalonSRX two = new TalonSRX(2);
   TalonSRX three = new TalonSRX(3);
   TalonSRX four = new TalonSRX(4);
-  TalonSRX five = new TalonSRX(5);
-  TalonSRX six = new TalonSRX(6);
+  TalonSRX falcRight = new TalonSRX(5);
+  TalonSRX falcLeft = new TalonSRX(6);
   
 
   XboxController gamePad = new XboxController(0);
@@ -114,28 +114,23 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     //two.set(TalonSRXControlMode.MotionMagic, (0 + (angleWrapTimes * 360) * 2.8444444444444));
     //three.set(TalonSRXControlMode.MotionMagic, (0 + (angleWrapTimes * 360) * 2.8444444444444));
-    one.setSelectedSensorPosition(0);
-    two.setSelectedSensorPosition(0);
-    three.setSelectedSensorPosition(0);
-    four.setSelectedSensorPosition(0);
+    
 
     lastAngle = 0;
     currentAngle = 0;
     angleWrapTimes = 0;
     currentAngleWrapped = 0;
+
+    navX.zeroYaw();
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    if(gamePad.getLeftX() != 0 && gamePad.getLeftY() != 0) {
-      double angleLeft = ((Math.toDegrees(Math.atan2(-gamePad.getLeftY(), gamePad.getLeftX()))+180.0) * (1024.0/360.0));
-      double angleRight = ((Math.toDegrees(Math.atan2(-gamePad.getRightY(), gamePad.getRightX()))+180.0) * (1024.0/360.0));
+    if(gamePad.getLeftX() >= 0.1 || gamePad.getLeftX() <= -0.1 ||  gamePad.getLeftY() >=0.1 || gamePad.getLeftY() <=-0.1) {
+      SwerveAngle.navTog = true;
 
-
-      SmartDashboard.putNumber("Degrees", Math.toDegrees(Math.atan2(-gamePad.getLeftY(), gamePad.getLeftX()))+180);
-      SmartDashboard.putNumber("Angle Left", angleLeft);
-
+      SmartDashboard.putNumber("Degrees", Math.toDegrees(Math.atan2(-gamePad.getLeftY(), gamePad.getLeftX()))+180.0);
       SmartDashboard.putNumber("Left X", gamePad.getLeftX());
       SmartDashboard.putNumber("Left Y", gamePad.getLeftY());
       SmartDashboard.putNumber("Right X", gamePad.getRightX());
@@ -145,17 +140,46 @@ public class Robot extends TimedRobot {
       SmartDashboard.putNumber("Encoder Three", three.getSelectedSensorPosition());
       
       swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), two, navX);
-      swerveAngleRight.calc(gamePad.getRightX(), gamePad.getRightY(), three, navX);
+      swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), three, navX);
 
-      /*six.set(TalonSRXControlMode.PercentOutput, gamePad.getLeftTriggerAxis());
-      five.set(TalonSRXControlMode.PercentOutput, gamePad.getRightTriggerAxis());*/
+      if(gamePad.getRightX() >= 0.1 || gamePad.getRightX() <= -0.1) { //Test if Right stick is being touched
 
-      /*double leftSpeed = Math.sqrt((gamePad.getLeftX()*gamePad.getLeftX())+(gamePad.getLeftY()*gamePad.getLeftY()));
-      double rightSpeed = Math.sqrt((gamePad.getRightX()*gamePad.getRightX())+(gamePad.getRightY()*gamePad.getRightY()));
-      */
-      five.set(TalonSRXControlMode.PercentOutput, gamePad.getRightTriggerAxis());
-      six.set(TalonSRXControlMode.PercentOutput, gamePad.getRightTriggerAxis());
+      }
+        falcRight.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) - (gamePad.getRightX() * 0.2));
+        falcLeft.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) + (gamePad.getRightX() * 0.2));
+      
+     
+     
+
+      
+//if(gamePad.getRightY() >= 0.1 || gamePad.getRightY() <= -0.1) {
+      //swerveAngleRight.calc(gamePad.getRightX(), gamePad.getRightY(), three, navX);
+//      Math.sqrt((gamePad.getLeftX()*gamePad.getLeftX())+(gamePad.getLeftY()*gamePad.getLeftY()));
+//      double rightSpeed = Math.sqrt((gamePad.getRightX()*gamePad.getRightX())+(gamePad.getRightY()*gamePad.getRightY()));
+//      }
     }
+    else {
+      SwerveAngle.navTog = false;
+      swerveAngleLeft.calc(0, -1, two, navX);
+      swerveAngleRight.calc(0, -1, three, navX);
+      falcRight.set(TalonSRXControlMode.PercentOutput, -gamePad.getRightX() * 0.2); //dominic
+      falcLeft.set(TalonSRXControlMode.PercentOutput,  gamePad.getRightX() * 0.2);
+    }
+    if(gamePad.getAButtonPressed()) {
+      SwerveAngle.navTog = !SwerveAngle.navTog;
+    } 
+    SmartDashboard.putBoolean("Field Oriented Control?", SwerveAngle.navTog);
+
+    if(gamePad.getLeftBumperPressed()) { 
+      two.setSelectedSensorPosition(-1024.0/4.0);
+    }
+    if(gamePad.getRightBumperPressed()) {
+      three.setSelectedSensorPosition(-1024.0/4.0);
+    }
+     if (gamePad.getXButton()) {
+      navX.zeroYaw();
+    }
+
   }
 
   /** This function is called once when the robot is disabled. */
@@ -168,11 +192,21 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when test mode is enabled. */
   @Override
-  public void testInit() {}
+  public void testInit() {
+  }
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+    if(gamePad.getAButton()) {
+      one.setSelectedSensorPosition(1024.0/4.0);
+    two.setSelectedSensorPosition(1024.0/4.0);
+    three.setSelectedSensorPosition(1024.0/4.0);
+    four.setSelectedSensorPosition(1024.0/4.0);
+    navX.zeroYaw();
+    }
+
+  }
 
   //Calculates the speed to drive the talons at
   public double driveSpeed(double x, double y) { //inputs must be gamePad.get{left or right}x/y();
@@ -201,4 +235,7 @@ public class Robot extends TimedRobot {
   }
   
 }
+
+
+
 
