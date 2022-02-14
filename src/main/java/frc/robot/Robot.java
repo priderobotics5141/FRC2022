@@ -30,8 +30,8 @@ import frc.robot.SwerveAngle;
 public class Robot extends TimedRobot {
 
   TalonSRX one = new TalonSRX(1);
-  TalonSRX two = new TalonSRX(2);
-  TalonSRX three = new TalonSRX(3);
+  public static TalonSRX two = new TalonSRX(2);
+  public static TalonSRX three = new TalonSRX(3);
   TalonSRX four = new TalonSRX(4);
   TalonSRX falcRight = new TalonSRX(5);
   TalonSRX falcLeft = new TalonSRX(6);
@@ -53,6 +53,8 @@ public class Robot extends TimedRobot {
 
   SwerveAngle swerveAngleLeft = new SwerveAngle();
   SwerveAngle swerveAngleRight = new SwerveAngle();
+
+  
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -145,8 +147,14 @@ public class Robot extends TimedRobot {
       if(gamePad.getRightX() >= 0.1 || gamePad.getRightX() <= -0.1) { //Test if Right stick is being touched
 
       }
+      SmartDashboard.putNumber("left postion", swerveAngleLeft.currentAngle + 180);
+      SmartDashboard.putNumber("right postion", swerveAngleRight.currentAngle + 180);
+      //rotate
+ 
         falcRight.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) - (gamePad.getRightX() * 0.2));
         falcLeft.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) + (gamePad.getRightX() * 0.2));
+
+
       
      
      

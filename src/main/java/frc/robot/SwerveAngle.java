@@ -7,6 +7,8 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import frc.robot.Robot;
+
 public class SwerveAngle {
 
     double lastAngle;
@@ -18,6 +20,11 @@ public class SwerveAngle {
     double currentAngleNav;
     double angleWrapTimesNav;
     double currentAngleWrappedNav;
+
+    double multiplyerLeft;
+    double multiplyerRight;
+    double multiplyerForward;
+    
 
     public static boolean navTog;
 
@@ -54,6 +61,26 @@ public class SwerveAngle {
     } else {
       motor.set(TalonSRXControlMode.MotionMagic, currentAngleWrapped * (1024.0/360.0));
     }
+
+  }
+
+  public void rotateCalc(double rightStick) {
+    multiplyerLeft = -(((((Robot.two.getSelectedSensorPosition() + 180.0) - 180.0) * (1.0 - 0.0)) / (270.0 - 180.0)) + 0.0);
+    if(multiplyerLeft > 1.0){
+      multiplyerLeft = 1.0;
+    } else if (multiplyerLeft < -1.0) {
+      multiplyerLeft = -1.0;
+    }
+    SmartDashboard.putNumber("Left Multiplyer", multiplyerLeft);
+
+    multiplyerRight = (((((Robot.two.getSelectedSensorPosition() + 180.0) - 0.0) * (1.0 - 0.0)) / (90.0 - 0.0)) + 0.0);
+    if(multiplyerRight > 1.0){
+      multiplyerRight = 1.0;
+    } else if (multiplyerRight < -1.0) {
+      multiplyerRight = -1.0;
+    }
+    SmartDashboard.putNumber("Right Multiplyer", multiplyerRight);
+
 
   }
     
