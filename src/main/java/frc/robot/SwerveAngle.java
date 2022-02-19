@@ -1,9 +1,19 @@
+/* To-Do List:
+  *Rotate while moving sideways
+
+
+
+
+
+*/
+
 package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
 
 import com.kauailabs.navx.frc.AHRS;
 
@@ -24,6 +34,8 @@ public class SwerveAngle {
     double multiplyerLeft;
     double multiplyerRight;
     double multiplyerForward;
+
+    double maximumSwerveAnglePivotWhileDrivingModifyer = 45;
     
 
     public static boolean navTog;
@@ -58,14 +70,41 @@ public class SwerveAngle {
       
       lastAngleNav = currentAngleNav;
       motor.set(TalonSRXControlMode.MotionMagic, (currentAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0));
+    } else if (Robot.gamePad.getRightX() >= 0.1 || Robot.gamePad.getRightX() <= -0.1 && Robot.touchingLeftStick()) {   
+      if (motor.getDeviceID() == 3) {
+        motor.set(TalonSRXControlMode.MotionMagic, (currentAngleWrapped + Robot.gamePad.getRightX()*45) * (1024.0/360.0)); //Janzen says: add another multiplier here that checks how close you are to pointing bot-sideways
+      } else {
+        motor.set(TalonSRXControlMode.MotionMagic, (currentAngleWrapped + Robot.gamePad.getRightX()*-45) * (1024.0/360.0));
+      }
     } else {
       motor.set(TalonSRXControlMode.MotionMagic, currentAngleWrapped * (1024.0/360.0));
     }
+  }
+
+  public void calc(double x, double y, TalonSRX motor) {
+    
+    currentAngle = Math.toDegrees(Math.atan2(y , -x));
+    SmartDashboard.putNumber("Current Angle", currentAngle);
+    if (lastAngle > 90 && currentAngle < -90) {
+      angleWrapTimes++;
+    }
+    if (lastAngle < -90 && currentAngle > 90) {
+      angleWrapTimes--;
+    }
+    currentAngleWrapped = currentAngle + angleWrapTimes * 360;
+    SmartDashboard.putNumber("current angle wrapped" + motor.getDeviceID(), currentAngleWrapped);
+    
+    lastAngle = currentAngle;
+
+    currentAngleWrapped = currentAngle + angleWrapTimes * 360;
+
+    motor.set(TalonSRXControlMode.MotionMagic, currentAngleWrapped * (1024.0/360.0));
 
   }
 
+
   public void rotateCalc(double rightStick) {
-    multiplyerLeft = -(((((Robot.two.getSelectedSensorPosition() + 180.0) - 180.0) * (1.0 - 0.0)) / (270.0 - 180.0)) + 0.0);
+    /*multiplyerLeft = -(((((Robot.two.getSelectedSensorPosition() + 180.0) - 180.0) * (1.0 - 0.0)) / (270.0 - 180.0)) + 0.0);
     if(multiplyerLeft > 1.0){
       multiplyerLeft = 1.0;
     } else if (multiplyerLeft < -1.0) {
@@ -80,8 +119,9 @@ public class SwerveAngle {
       multiplyerRight = -1.0;
     }
     SmartDashboard.putNumber("Right Multiplyer", multiplyerRight);
+*/
 
-
+  
   }
     
 }

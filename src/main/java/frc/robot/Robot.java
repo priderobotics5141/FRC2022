@@ -2,6 +2,14 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+
+/* To-Do List:
+  * FRC PID
+  * Prevent passive roation
+  *
+  *
+  *
+*/
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
@@ -37,7 +45,7 @@ public class Robot extends TimedRobot {
   TalonSRX falcLeft = new TalonSRX(6);
   
 
-  XboxController gamePad = new XboxController(0);
+  public static XboxController gamePad = new XboxController(0);
 
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
@@ -130,7 +138,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     if(gamePad.getLeftX() >= 0.1 || gamePad.getLeftX() <= -0.1 ||  gamePad.getLeftY() >=0.1 || gamePad.getLeftY() <=-0.1) {
-      SwerveAngle.navTog = true;
+      //SwerveAngle.navTog = true;
 
       SmartDashboard.putNumber("Degrees", Math.toDegrees(Math.atan2(-gamePad.getLeftY(), gamePad.getLeftX()))+180.0);
       SmartDashboard.putNumber("Left X", gamePad.getLeftX());
@@ -145,7 +153,7 @@ public class Robot extends TimedRobot {
       swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), three, navX);
 
       if(gamePad.getRightX() >= 0.1 || gamePad.getRightX() <= -0.1) { //Test if Right stick is being touched
-
+        
       }
       SmartDashboard.putNumber("left postion", swerveAngleLeft.currentAngle + 180);
       SmartDashboard.putNumber("right postion", swerveAngleRight.currentAngle + 180);
@@ -167,10 +175,10 @@ public class Robot extends TimedRobot {
 //      }
     }
     else {
-      SwerveAngle.navTog = false;
-      swerveAngleLeft.calc(0, -1, two, navX);
-      swerveAngleRight.calc(0, -1, three, navX);
-      falcRight.set(TalonSRXControlMode.PercentOutput, -gamePad.getRightX() * 0.2); //dominic
+      //SwerveAngle.navTog = false;
+      swerveAngleLeft.calc(0, -1, two);
+      swerveAngleRight.calc(0, -1, three);
+      falcRight.set(TalonSRXControlMode.PercentOutput, -gamePad.getRightX() * 0.2); 
       falcLeft.set(TalonSRXControlMode.PercentOutput,  gamePad.getRightX() * 0.2);
     }
     if(gamePad.getAButtonPressed()) {
@@ -240,6 +248,14 @@ public class Robot extends TimedRobot {
     motor.set(TalonSRXControlMode.MotionMagic, currentAngleWrapped * (1024.0/360.0));
     lastAngle = currentAngle;
 
+  }
+
+  public static boolean touchingLeftStick() {
+    if (gamePad.getLeftX() >= 0.1 || gamePad.getLeftX() <= -0.1 ||  gamePad.getLeftY() >=0.1 || gamePad.getLeftY() <=-0.1) {
+      return false;
+    } else {
+      return true;
+    }
   }
   
 }
