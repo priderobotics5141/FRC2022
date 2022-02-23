@@ -155,14 +155,14 @@ public class Robot extends TimedRobot {
       if(gamePad.getRightX() >= 0.1 || gamePad.getRightX() <= -0.1) { //Test if Right stick is being touched
         
       }
-      SmartDashboard.putNumber("left postion", swerveAngleLeft.currentAngle + 180);
-      SmartDashboard.putNumber("right postion", swerveAngleRight.currentAngle + 180);
+      SmartDashboard.putNumber("left postion", swerveAngleLeft.currentStickAngle + 180);
+      SmartDashboard.putNumber("right postion", swerveAngleRight.currentStickAngle + 180);
       //rotate
  
         falcRight.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) - (gamePad.getRightX() * 0.2));
         falcLeft.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) + (gamePad.getRightX() * 0.2));
 
-
+      swerveAngleRight.rotateCalc(gamePad.getRightX());
       
      
      
