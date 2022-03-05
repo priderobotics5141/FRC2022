@@ -89,11 +89,20 @@ public class Robot extends TimedRobot {
 
   private PIDController pidLimeX = new PIDController(0.04, 0.0, 0.0);
   private PIDController pidLimeY = new PIDController(0.02, 0.00, 0.0);
+  private PIDController pidFalcLeftDistance = new PIDController(0.000025, 0.0, 0.0);
+  private PIDController pidFalcRightDistance = new PIDController(0.000025, 0.0, 0.0);
   public boolean readytoshoot = false;
 
   double stickLength;
 
-  
+  double rawAngle;
+  double tempAngle;
+  double trueAngle;
+  double trueError;
+  double stickDegree;
+
+  double  a = 90;
+  double b;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -134,6 +143,10 @@ public class Robot extends TimedRobot {
     m_autoSelected = m_chooser.getSelected();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+    falcRight.setSelectedSensorPosition(0);
+    falcLeft.setSelectedSensorPosition(0);
+
+    
   }
 
   /** This function is called periodically during autonomous. */
@@ -149,7 +162,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("error pid lime x", pidLimeX.getPositionError());
     SmartDashboard.putNumber("error pid lime y", pidLimeY.getPositionError());
 
-    if(vlime == 1){
+    if(vlime == /*1 THIS WAS DANTE*/ 0){
       falcLeft.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4)+ (pidLimeX.calculate(xlime,0)*-0.4));
       falcRight.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4) + (pidLimeX.calculate(xlime,0)*0.4));
     } else{
@@ -161,7 +174,40 @@ public class Robot extends TimedRobot {
     }else{
       readytoshoot = false;
     }
-    }
+
+  //falcLeft.set(TalonFXControlMode.Position, 300);
+  //falcRight.set(TalonFXControlMode.Position, 300);
+  SmartDashboard.putNumber("falcRight.getSelectedSensorPosition()", falcRight.getSelectedSensorPosition());
+  //falcLeft.set(ControlMode.PercentOutput,pidFalcLeftDistance.calculate(falcLeft.getSelectedSensorPosition(),40000));
+  //falcRight.set(ControlMode.PercentOutput,pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(),40000));
+
+    //Dante
+    rawAngle = two.getSelectedSensorPosition()*360/1024;
+    if (rawAngle >= 0 ){tempAngle = rawAngle % 360;}
+      else{tempAngle = 360 - (rawAngle%360);}
+
+    if (tempAngle <=  180){trueAngle = tempAngle;}
+      else{trueAngle = -360 + tempAngle;}
+
+    if(Math.abs(trueAngle - a) <= 180){ trueError = trueAngle - a;}
+      else{trueError = trueAngle - a - 360*Math.signum(trueAngle - a);}
+
+      SmartDashboard.putNumber("Bit Position", two.getSelectedSensorPosition());
+      SmartDashboard.putNumber("tempAngle", tempAngle);
+      SmartDashboard.putNumber("trueAngle", trueAngle);
+      SmartDashboard.putNumber("trueError", trueError);
+
+      SmartDashboard.putNumber("degree", gamePad.getLeftY());
+      SmartDashboard.putNumber("stickdegree", stickDegree);
+
+      if (gamePad.getLeftX() >= 0 && (-gamePad.getLeftY()) >= 0){ b = 360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
+      if (gamePad.getLeftX() < 0 && (-gamePad.getLeftY()) >= 0){ b = 90 -360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
+      if (gamePad.getLeftX() < 0 && (-gamePad.getLeftY()) < 0){ b = 180 + 360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
+      if (gamePad.getLeftX() >= 0 && (-gamePad.getLeftY()) < 0){ b = 270 -360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
+
+      if (b <=  180){stickDegree = b;}
+      else{stickDegree = -360 + b;}
+  }
 
   /** This function is called once when teleop is enabled. */
   @Override
@@ -294,12 +340,15 @@ pressedLeftStick = true;
   /** This function is called once when test mode is enabled. */
   @Override
   public void testInit() {
+
+    falcRight.setSelectedSensorPosition(0);
+    falcLeft.setSelectedSensorPosition(0);
   }
 
   /** This function is called periodically during test mode. */
   @Override
   public void testPeriodic() {
-    if(gamePad.getAButton()) {
+    /*if(gamePad.getAButton()) {
       one.setSelectedSensorPosition(1024.0/4.0);
     two.setSelectedSensorPosition(1024.0/4.0);
     three.setSelectedSensorPosition(1024.0/4.0);
@@ -308,14 +357,17 @@ pressedLeftStick = true;
     }    
     swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
     swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-    
+
     if(gamePad.getLeftBumperPressed()) { 
       two.setSelectedSensorPosition(-1024.0/4.0);
     }
     if(gamePad.getRightBumperPressed()) {
       three.setSelectedSensorPosition(-1024.0/4.0);
     }
-
+*/
+    SmartDashboard.putNumber("distance", falcRight.getSelectedSensorPosition());
+    falcRight.set(TalonFXControlMode.PercentOutput, gamePad.getRightTriggerAxis()*.3);
+    falcLeft.set(TalonFXControlMode.PercentOutput, gamePad.getRightTriggerAxis()*.3);
   }
 
   //Calculates the speed to drive the talons at
