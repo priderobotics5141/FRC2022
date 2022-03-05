@@ -23,7 +23,7 @@ public class SwerveAngle {
 
     double lastStickAngle;
     double currentStickAngle;
-    public double angleWrapTimes;
+    double angleWrapTimes;
     double currentStickAngleWrapped;
 
     double lastAngleNav;
@@ -31,7 +31,7 @@ public class SwerveAngle {
     double angleWrapTimesNav;
     double currentAngleWrappedNav;
 
-    public static double multiplier = Math.cos((2.0*Math.PI/1024.0)*((Robot.three.getSelectedSensorPosition())));
+    double multiplier = Math.cos((2.0*Math.PI/1024.0)*((Robot.three.getSelectedSensorPosition())));
 
     double maximumSwerveAnglePivotWhileDrivingModifyer = 45;
 
@@ -75,17 +75,16 @@ public class SwerveAngle {
       
       lastAngleNav = currentAngleNav;
       double multiplier = Math.cos((2.0*Math.PI/1024.0)*((Robot.three.getSelectedSensorPosition())));
-      if (Robot.gamePad.getRightX() >= 0.1 || Robot.gamePad.getRightX() <= -0.1){
-        if (motor.getDeviceID() == 3) {
-          motor.set(TalonSRXControlMode.MotionMagic, (currentStickAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0) + Robot.gamePad.getRightX()* multiplier*90.0);
-        } else motor.set(TalonSRXControlMode.MotionMagic, (currentStickAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0) - Robot.gamePad.getRightX()* multiplier*90.0);
-      } else motor.set(TalonSRXControlMode.MotionMagic, (currentStickAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0));
 
+      motor.set(TalonSRXControlMode.MotionMagic, (currentStickAngleWrapped - currentAngleWrappedNav) * (1024.0/360.0));
     } else if (Robot.gamePad.getRightX() >= 0.1 || Robot.gamePad.getRightX() <= -0.1 && Robot.touchingLeftStick()) {   
+      if (false/*motor.getDeviceID() == 3*/) {
+        motor.set(TalonSRXControlMode.MotionMagic, (currentStickAngleWrapped + Robot.gamePad.getRightX()*maximumSwerveAnglePivotWhileDrivingModifyer) * (1024.0/360.0)+(motor.getSelectedSensorPosition()+512.0)%512.0); //Janzen says: add another multiplier here that checks how close you are to pointing bot-sideways
+      } else {
         motor.set(TalonSRXControlMode.MotionMagic, (currentStickAngleWrapped + Robot.gamePad.getRightX()*-maximumSwerveAnglePivotWhileDrivingModifyer) * (1024.0/360.0)*multiplier*100);
-      //}
-    //} // else {
-      //motor.set(TalonSRXControlMode.MotionMagic, currentStickAngleWrapped * (1024.0/360.0));
+      }
+    } else {
+      motor.set(TalonSRXControlMode.MotionMagic, currentStickAngleWrapped * (1024.0/360.0));
     }
   }
 
@@ -101,13 +100,12 @@ public class SwerveAngle {
     if (lastStickAngle < -90 && currentStickAngle > 90) {
       angleWrapTimes--;
     }
-
     currentStickAngleWrapped = currentStickAngle + angleWrapTimes * 360;
     SmartDashboard.putNumber("current angle wrapped" + motor.getDeviceID(), currentStickAngleWrapped);
     
     lastStickAngle = currentStickAngle;
 
-    currentStickAngleWrapped = currentStickAngle + angleWrapTimes * 360; //WHY ARE WE DOING THIS TWICE?? 
+    currentStickAngleWrapped = currentStickAngle + angleWrapTimes * 360; //WHY ARE WE DOING THIS TWICE??
 
     
     double multiplier = Math.cos((2.0*Math.PI/1024.0)*((Robot.three.getSelectedSensorPosition())));
@@ -137,13 +135,11 @@ public class SwerveAngle {
     SmartDashboard.putNumber("Right Multiplyer", multiplyerRight);
 */
 
-  }
+    
 
-  public void zero() {
-    Robot.two.set(TalonSRXControlMode.MotionMagic, 0);
-    while(Robot.two.getClosedLoopError() > 0) {
 
-    }
+    
+
   }
 
     

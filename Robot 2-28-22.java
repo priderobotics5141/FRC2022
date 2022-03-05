@@ -12,26 +12,17 @@
 */
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
-import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
+
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 
 import com.kauailabs.navx.frc.AHRS;
-
-import org.ejml.simple.SimpleSparseOperations;
 
 import frc.robot.SwerveAngle;
 
@@ -50,14 +41,10 @@ public class Robot extends TimedRobot {
   public static TalonSRX two = new TalonSRX(2);
   public static TalonSRX three = new TalonSRX(3);
   TalonSRX four = new TalonSRX(4);
-  TalonFX falcRight = new TalonFX(5);
-  TalonFX falcLeft = new TalonFX(6);
-  TalonFX shooter1 = new TalonFX(7);
-  TalonFX shooter2 = new TalonFX(8);
-  VictorSPX feeder = new VictorSPX(9);
+  TalonSRX falcRight = new TalonSRX(5);
+  TalonSRX falcLeft = new TalonSRX(6);
+  
 
-  
-  
   public static XboxController gamePad = new XboxController(0);
 
   private static final String kDefaultAuto = "Default";
@@ -69,29 +56,11 @@ public class Robot extends TimedRobot {
   double currentAngle;
   double angleWrapTimes;
   double currentAngleWrapped;
-  boolean pressedLeftStick = false;
-  double steadyHeading;
-  boolean shooting;
-
-  Timer shootTimer = new Timer();
 
   AHRS navX = new AHRS();
 
   SwerveAngle swerveAngleLeft = new SwerveAngle(two);
   SwerveAngle swerveAngleRight = new SwerveAngle(three);
-
-  NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-  NetworkTableEntry tx = table.getEntry("tx");
-  NetworkTableEntry ty = table.getEntry("ty");
-  NetworkTableEntry tv = table.getEntry("tv");
-  NetworkTableEntry ta = table.getEntry("ta");
-  public double distancefromtape = 23.5;
-
-  private PIDController pidLimeX = new PIDController(0.04, 0.0, 0.0);
-  private PIDController pidLimeY = new PIDController(0.02, 0.00, 0.0);
-  public boolean readytoshoot = false;
-
-  double stickLength;
 
   
 
@@ -139,29 +108,16 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    double xlime = tx.getDouble(0.0);
-    double ylime = ty.getDouble(0.0);
-    double vlime = tv.getDouble(0.0);
-    SmartDashboard.putNumber("limelightx", xlime);
-    SmartDashboard.putNumber("limelighty", ylime);
-    SmartDashboard.putNumber("valid target", xlime);
-    SmartDashboard.putBoolean("ready to shoot?", readytoshoot);
-    SmartDashboard.putNumber("error pid lime x", pidLimeX.getPositionError());
-    SmartDashboard.putNumber("error pid lime y", pidLimeY.getPositionError());
-
-    if(vlime == 1){
-      falcLeft.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4)+ (pidLimeX.calculate(xlime,0)*-0.4));
-      falcRight.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4) + (pidLimeX.calculate(xlime,0)*0.4));
-    } else{
-      falcLeft.set(TalonFXControlMode.PercentOutput, 0);
-      falcRight.set(TalonFXControlMode.PercentOutput, 0);
+    switch (m_autoSelected) {
+      case kCustomAuto:
+        // Put custom auto code here
+        break;
+      case kDefaultAuto:
+      default:
+        // Put default auto code here
+        break;
     }
-    if(pidLimeY.getPositionError() <= 7.2 && pidLimeY.getPositionError() >= -7.2 && pidLimeX.getPositionError() <= 4.0 && pidLimeX.getPositionError() >= -4.0) {
-      readytoshoot = true;
-    }else{
-      readytoshoot = false;
-    }
-    }
+  }
 
   /** This function is called once when teleop is enabled. */
   @Override
@@ -169,7 +125,6 @@ public class Robot extends TimedRobot {
     //two.set(TalonSRXControlMode.MotionMagic, (0 + (angleWrapTimes * 360) * 2.8444444444444));
     //three.set(TalonSRXControlMode.MotionMagic, (0 + (angleWrapTimes * 360) * 2.8444444444444));
     
-    //two.set(TalonSRXControlMode., 1024 * (two.getSelectedSensorPosition()/1024));
 
     lastAngle = 0;
     currentAngle = 0;
@@ -177,23 +132,11 @@ public class Robot extends TimedRobot {
     currentAngleWrapped = 0;
 
     navX.zeroYaw();
-
-    
-
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-   SmartDashboard.putBoolean("pressedLeftStick", pressedLeftStick);
-    if(pressedLeftStick=false){
-      steadyHeading = navX.getYaw();
-      SmartDashboard.putNumber("steadyHeading", steadyHeading);
-      SmartDashboard.putNumber("navXgetYaw", navX.getYaw());
-    }
-
-    stickLength = Math.sqrt((gamePad.getLeftX() * gamePad.getLeftX()) + (gamePad.getLeftY() * gamePad.getLeftY()));
-
     if(gamePad.getLeftX() >= 0.1 || gamePad.getLeftX() <= -0.1 ||  gamePad.getLeftY() >=0.1 || gamePad.getLeftY() <=-0.1) {
       //SwerveAngle.navTog = true;
 
@@ -220,67 +163,49 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("three.getSelectedSensorPosition()",three.getSelectedSensorPosition() );
         SmartDashboard.putNumber("swerveAngleRight.angleWrapTimes", swerveAngleRight.angleWrapTimes);
         SmartDashboard.putNumber("three.getSelectedSensorPosition()-swerveAngleRight.angleWrapTimes*1024)", (three.getSelectedSensorPosition())-swerveAngleRight.angleWrapTimes*1024);
-        SmartDashboard.putNumber("Error value", Math.abs(three.getClosedLoopError()));
-        SmartDashboard.putNumber("stick power", stickLength);
-        if(Math.abs(three.getClosedLoopError()) < 50){
-         if((three.getSelectedSensorPosition()-swerveAngleRight.angleWrapTimes*1024) < 0) {
-           falcRight.set(TalonFXControlMode.PercentOutput, (stickLength * ((gamePad.getRightTriggerAxis() * 0.2) + 0.3)) - /*Math.abs(SwerveAngle.multiplier) * */ (gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
-           falcLeft.set(TalonFXControlMode.PercentOutput, (stickLength * ((gamePad.getRightTriggerAxis() * 0.2) + 0.3)) + /*Math.abs(SwerveAngle.multiplier) * */(gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
-          } else {
-           falcRight.set(TalonFXControlMode.PercentOutput, (stickLength * ((gamePad.getRightTriggerAxis() * 0.2) + 0.3)) + /*Math.abs(SwerveAngle.multiplier) * */(gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
-           falcLeft.set(TalonFXControlMode.PercentOutput, (stickLength * ((gamePad.getRightTriggerAxis() * 0.2) + 0.3)) - /* Math.abs(SwerveAngle.multiplier) * */(gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
-           } 
+        if(((three.getSelectedSensorPosition())-swerveAngleRight.angleWrapTimes*1024) < 0) /*&& (three.getSelectedSensorPosition()-swerveAngleRight.angleWrapTimes*1024) < 128)*/ {
+          falcRight.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) - /*Math.abs(SwerveAngle.multiplier) * */ (gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
+          falcLeft.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) + /*Math.abs(SwerveAngle.multiplier) * */(gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
         } else {
-          falcLeft.set(TalonFXControlMode.PercentOutput, 0);
-          falcRight.set(TalonFXControlMode.PercentOutput, 0);
+          falcRight.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) + /*Math.abs(SwerveAngle.multiplier) * */(gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
+          falcLeft.set(TalonSRXControlMode.PercentOutput, (gamePad.getRightTriggerAxis() * 0.4) - /* Math.abs(SwerveAngle.multiplier) * */(gamePad.getRightX() * 0.1 * (1-Math.abs(SwerveAngle.multiplier))));
         }
         //}
       swerveAngleRight.rotateCalc(swerveAngleLeft);
       swerveAngleRight.rotateCalc(swerveAngleRight);
+      
+     
+     
+
       
 //if(gamePad.getRightY() >= 0.1 || gamePad.getRightY() <= -0.1) {
       //swerveAngleRight.calc(gamePad.getRightX(), gamePad.getRightY(), three, navX);
 //      Math.sqrt((gamePad.getLeftX()*gamePad.getLeftX())+(gamePad.getLeftY()*gamePad.getLeftY()));
 //      double rightSpeed = Math.sqrt((gamePad.getRightX()*gamePad.getRightX())+(gamePad.getRightY()*gamePad.getRightY()));
 //      }
-pressedLeftStick = true;  
-  }
+    }
     else {
       //SwerveAngle.navTog = false;
-      two.set(ControlMode.MotionMagic,1024*swerveAngleLeft.angleWrapTimes - 256);
-      three.set(ControlMode.MotionMagic,1024*swerveAngleLeft.angleWrapTimes - 256);
-//      swerveAngleLeft.calc(1024*angleWrapTimes, -1, two);
-//      swerveAngleRight.calc(1024*angleWrapTimes, -1, three);
-      falcRight.set(TalonFXControlMode.PercentOutput, -gamePad.getRightX() * 0.2); 
-      falcLeft.set(TalonFXControlMode.PercentOutput,  gamePad.getRightX() * 0.2);
-
-      pressedLeftStick=false;
+      swerveAngleLeft.calc(0, -1, two);
+      swerveAngleRight.calc(0, -1, three);
+      falcRight.set(TalonSRXControlMode.PercentOutput, -gamePad.getRightX() * 0.2); 
+      falcLeft.set(TalonSRXControlMode.PercentOutput,  gamePad.getRightX() * 0.2);
     }
     if(gamePad.getAButtonPressed()) {
       SwerveAngle.navTog = !SwerveAngle.navTog;
     } 
     SmartDashboard.putBoolean("Field Oriented Control?", SwerveAngle.navTog);
 
+    if(gamePad.getLeftBumperPressed()) { 
+      two.setSelectedSensorPosition(-1024.0/4.0);
+    }
+    if(gamePad.getRightBumperPressed()) {
+      three.setSelectedSensorPosition(-1024.0/4.0);
+    }
      if (gamePad.getXButton()) {
       navX.zeroYaw();
     }
-    SmartDashboard.putBoolean("Shooting", shooting);
-    if (gamePad.getYButtonPressed()){
-      shootTimer.reset();
-      shootTimer.start();
-      shooting = true;
-    }
 
-    if (shooting && shootTimer.get()<0.5){
-      shooter1.set(TalonFXControlMode.PercentOutput, 0.5);
-      shooter2.set(TalonFXControlMode.PercentOutput, 0.5);
-   } else if (shooting && shootTimer.get()<0.8){
-    shooter1.set(TalonFXControlMode.PercentOutput, 0.5);
-    shooter2.set(TalonFXControlMode.PercentOutput, 0.5);
-    feeder.set(ControlMode.PercentOutput, 0.4);
-   } else if (shooting){
-      shooting = false;
-    }
   }
 
   /** This function is called once when the robot is disabled. */
@@ -305,15 +230,6 @@ pressedLeftStick = true;
     three.setSelectedSensorPosition(1024.0/4.0);
     four.setSelectedSensorPosition(1024.0/4.0);
     navX.zeroYaw();
-    }    
-    swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-    swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-    
-    if(gamePad.getLeftBumperPressed()) { 
-      two.setSelectedSensorPosition(-1024.0/4.0);
-    }
-    if(gamePad.getRightBumperPressed()) {
-      three.setSelectedSensorPosition(-1024.0/4.0);
     }
 
   }
