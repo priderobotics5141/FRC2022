@@ -35,6 +35,14 @@ import org.ejml.simple.SimpleSparseOperations;
 
 import frc.robot.SwerveAngle;
 
+import edu.wpi.first.wpilibj.I2C;
+
+import com.revrobotics.ColorSensorV3;
+import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
+import com.revrobotics.ColorMatchResult;
+import com.revrobotics.ColorMatch;
+import edu.wpi.first.wpilibj.util.Color;
+
 
   
 
@@ -92,6 +100,61 @@ public class Robot extends TimedRobot {
   public boolean readytoshoot = false;
 
   double stickLength;
+
+//color stuff start
+private final I2C.Port i2cPort1 = I2C.Port.kOnboard;
+private final I2C.Port i2cPort2 = I2C.Port.kMXP;
+
+/**
+ * A Rev Color Sensor V3 object is constructed with an I2C port as a 
+ * parameter. The device will be automatically initialized with default 
+ * parameters.
+ */
+private final ColorSensorV3 m_colorSensor1 = new ColorSensorV3(i2cPort1);
+private final ColorSensorV3 m_colorSensor2 = new ColorSensorV3(i2cPort2);
+
+/**
+ * A Rev Color Match object is used to register and detect known colors. This can 
+ * be calibrated ahead of time or during operation.
+ * 
+ * This object uses a simple euclidian distance to estimate the closest match
+ * with given confidence range.
+ */
+private final ColorMatch m_colorMatcher1 = new ColorMatch();
+private final ColorMatch m_colorMatcher2 = new ColorMatch();
+
+/**
+ * Note: Any example colors should be calibrated as the user needs, these
+ * are here as a basic example.
+ */
+ private final Color kBlueTarget = new Color(0.156, 0.406, 0.432);
+                 //3 inches away, light on: (0.22,0.453,0.343)
+                 //3 inches away, light off:(0.28,0.463,0.232)
+                 //6 inches away, light on:(0.256,0.476,0.265)
+                 //6 inches away, light off:(0..31,0.464,0.235)
+private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
+                 //3 inches away, light on: (0.385,0.425,0.191)
+                 //3 inches away, light off:(0.309,0.466,0.221)
+                 //6 inches away, light on:(0.249,0.475,0.271)
+                 //6 inches away, light off:(0.30,0.465,0.229)     
+  public boolean ball_in_low;
+  public boolean ball_in_high;
+  public boolean intake;
+  public boolean shoot;
+  public boolean feederboolean;
+  public boolean feederSmartDash;
+  public boolean readyToShoot;
+  TalonSRX falcIntake = new TalonSRX(1);
+  TalonSRX falcFeeder = new TalonSRX(2);
+  TalonSRX falcShooter1 = new TalonSRX(3);
+  TalonSRX falcShooter2 = new TalonSRX(4);
+  Timer timer1 = new Timer();
+  Timer timer2 = new Timer();
+  public double intakeMotor;
+  public double shootMotor;
+  public double feederMotor;
+  public double shooter1SmartDash;
+  public double shooter2SmartDash;
 
   
 
@@ -185,6 +248,11 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    double xlime = tx.getDouble(0.0);
+    double ylime = ty.getDouble(0.0);
+    double alime = ta.getDouble(0.0);
+    double vlime = tv.getDouble(0.0);
+
    SmartDashboard.putBoolean("pressedLeftStick", pressedLeftStick);
     if(pressedLeftStick=false){
       steadyHeading = navX.getYaw();
@@ -280,6 +348,82 @@ pressedLeftStick = true;
     feeder.set(ControlMode.PercentOutput, 0.4);
    } else if (shooting){
       shooting = false;
+    }
+
+     //color stuff start
+     SmartDashboard.getNumber("inakeMotor", intakeMotor);
+     SmartDashboard.getNumber("feederMotor", feederMotor);
+     SmartDashboard.getNumber("feederMotor", shootMotor);
+     SmartDashboard.getNumber("feederMotor", shooter2SmartDash);
+     SmartDashboard.getNumber("feederMotor", shooter1SmartDash);
+     if(gamePad.getBButtonPressed()){intake=!intake;}
+     if(gamePad.getAButtonPressed()){shoot=!shoot;}
+     if(m_colorSensor1.getProximity() > 200.0){ball_in_low=true;} else ball_in_low=false;
+     if(m_colorSensor2.getProximity() > 200.0){ball_in_high=true;} else ball_in_high=false;
+     if(intake){
+      if(ball_in_low = false){
+        //falcIntake.set(TalonSRXControlMode.PercentOutput, 0.5);
+        intakeMotor = 0.5;
+       } else {
+        intake=false;
+        System.out.println("Ball in low"); // vibrate controller?
+        feederboolean=true;
+        intakeMotor = 0.0;
+       }
+     }
+     if(feederboolean){
+      if(ball_in_low && ball_in_high == false){
+       /*falcIntake.set(TalonSRXControlMode.PercentOutput, 0.5);
+       falcFeeder.set(TalonSRXControlMode.PercentOutput, 0.5);*/
+       intakeMotor = 0.5;
+       feederMotor = 0.5;
+      }
+      if(ball_in_low == false && ball_in_high == false){
+       //falcFeeder.set(TalonSRXControlMode.PercentOutput, 0.5);
+       feederMotor = 0.5;
+      }
+      if(ball_in_high){
+       System.out.println("Ball in high"); // vibrate controller? 
+       feederboolean =false;
+       feederMotor = 0.0;
+      }
+     }
+     if(shoot){
+      if(vlime == 1){
+        falcLeft.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4)+ (pidLimeX.calculate(xlime,0)*-0.4));
+        falcRight.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4) + (pidLimeX.calculate(xlime,0)*0.4));
+      }
+
+      if(pidLimeY.getPositionError() <= 7.2 && pidLimeY.getPositionError() >= -7.2 && pidLimeX.getPositionError() <= 4.0 && pidLimeX.getPositionError() >= -4.0) {
+        readytoshoot = true;
+      }else{
+        readytoshoot = false;
+      }
+
+      if(ball_in_high){ //timed sequence goes below here
+       timer1.reset();
+       timer1.start();
+       if(timer1.get()<0.5){
+        /*falcShooter1.set(TalonSRXControlMode.PercentOutput, 0.5);
+        falcShooter2.set(TalonSRXControlMode.PercentOutput, 0.5);*/
+         shooter1SmartDash = 0.5;
+         shooter2SmartDash = 0.5;
+       } else if (readyToShoot=false) {
+        /*falcShooter1.set(TalonSRXControlMode.PercentOutput, 0.5);
+        falcShooter2.set(TalonSRXControlMode.PercentOutput, 0.5);*/
+        shooter1SmartDash = 0.5;
+        shooter2SmartDash = 0.5;
+        timer2.reset();
+        timer2.start();
+       } else if (timer2.get()<0.5){
+        /*falcShooter1.set(TalonSRXControlMode.PercentOutput, 0.5);
+        falcShooter2.set(TalonSRXControlMode.PercentOutput, 0.5);
+        falcFeeder.set(TalonSRXControlMode.PercentOutput, 0.5);*/
+        shooter1SmartDash = 0.5;
+        shooter2SmartDash = 0.5;
+        feederMotor = 0.0;
+       } else{shoot=false;} // ?and print something to terminal or dashboard?
+      }
     }
   }
 
