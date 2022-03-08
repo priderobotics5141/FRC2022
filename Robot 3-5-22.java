@@ -24,7 +24,6 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.motorcontrol.Victor;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -56,9 +55,8 @@ public class Robot extends TimedRobot {
   TalonFX shooter1 = new TalonFX(7);
   TalonFX shooter2 = new TalonFX(8);
   VictorSPX feeder = new VictorSPX(9);
-  VictorSPX intake = new VictorSPX(10);
-  TalonFX climb1 = new TalonFX(11);
-  TalonFX climb2 = new TalonFX(12);
+
+  
   
   public static XboxController gamePad = new XboxController(0);
 
@@ -91,11 +89,7 @@ public class Robot extends TimedRobot {
 
   private PIDController pidLimeX = new PIDController(0.04, 0.0, 0.0);
   private PIDController pidLimeY = new PIDController(0.02, 0.00, 0.0);
-  private PIDController pidFalcLeftDistance = new PIDController(0.00003, 0.0, 0.0);
-  private PIDController pidFalcRightDistance = new PIDController(0.00003, 0.0, 0.0);
-
   public boolean readytoshoot = false;
-  boolean climb = false;
 
   double stickLength;
 
@@ -103,10 +97,8 @@ public class Robot extends TimedRobot {
   double tempAngle;
   double trueAngle;
   double trueError;
-  double stickDegree;
 
-  double  a = 90;
-  double b;
+  double  a = 0;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -149,10 +141,6 @@ public class Robot extends TimedRobot {
     System.out.println("Auto selected: " + m_autoSelected);
     falcRight.setSelectedSensorPosition(0);
     falcLeft.setSelectedSensorPosition(0);
-
-    navX.zeroYaw();
-
-    
   }
 
   /** This function is called periodically during autonomous. */
@@ -168,7 +156,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("error pid lime x", pidLimeX.getPositionError());
     SmartDashboard.putNumber("error pid lime y", pidLimeY.getPositionError());
 
-    if(vlime == /*1 THIS WAS DANTE*/ 0){
+    if(vlime == 1){
       falcLeft.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4)+ (pidLimeX.calculate(xlime,0)*-0.4));
       falcRight.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4) + (pidLimeX.calculate(xlime,0)*0.4));
     } else{
@@ -181,38 +169,10 @@ public class Robot extends TimedRobot {
       readytoshoot = false;
     }
 
-  //falcLeft.set(TalonFXControlMode.Position, 300);
-  //falcRight.set(TalonFXControlMode.Position, 300);
-  SmartDashboard.putNumber("falcRight.getSelectedSensorPosition()", falcRight.getSelectedSensorPosition());
-  falcLeft.set(ControlMode.PercentOutput,pidFalcLeftDistance.calculate(falcLeft.getSelectedSensorPosition(),40000)); // 36 inches * (10000/9)=40000
-  falcRight.set(ControlMode.PercentOutput,pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(),40000));
-
-    //Dante
-    rawAngle = two.getSelectedSensorPosition()*360/1024;
-    if (rawAngle >= 0 ){tempAngle = rawAngle % 360;}
-      else{tempAngle = 360 - (rawAngle%360);}
-
-    if (tempAngle <=  180){trueAngle = tempAngle;}
-      else{trueAngle = -360 + tempAngle;}
-
-    if(Math.abs(trueAngle - a) <= 180){ trueError = trueAngle - a;}
-      else{trueError = trueAngle - a - 360*Math.signum(trueAngle - a);}
-
-      SmartDashboard.putNumber("Bit Position", two.getSelectedSensorPosition());
-      SmartDashboard.putNumber("tempAngle", tempAngle);
-      SmartDashboard.putNumber("trueAngle", trueAngle);
-      SmartDashboard.putNumber("trueError", trueError);
-
-      SmartDashboard.putNumber("degree", gamePad.getLeftY());
-      SmartDashboard.putNumber("stickdegree", stickDegree);
-
-      if (gamePad.getLeftX() >= 0 && (-gamePad.getLeftY()) >= 0){ b = 360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
-      if (gamePad.getLeftX() < 0 && (-gamePad.getLeftY()) >= 0){ b = 90 -360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
-      if (gamePad.getLeftX() < 0 && (-gamePad.getLeftY()) < 0){ b = 180 + 360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
-      if (gamePad.getLeftX() >= 0 && (-gamePad.getLeftY()) < 0){ b = 270 -360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
-
-      if (b <=  180){stickDegree = b;}
-      else{stickDegree = -360 + b;}
+    //falcLeft.set(TalonFXControlMode.Position, 300);
+    //falcRight.set(TalonFXControlMode.Position, 300);
+    SmartDashboard.putNumber("falcRight.getSelectedSensorPosition()", falcRight.getSelectedSensorPosition());
+    
   }
 
   /** This function is called once when teleop is enabled. */
@@ -333,13 +293,6 @@ pressedLeftStick = true;
    } else if (shooting){
       shooting = false;
     }
-
-    SmartDashboard.putBoolean("climb", climb);
-    if(gamePad.getBackButton() && gamePad.getStartButton()){climb=true;}
-    if(gamePad.getLeftBumper() && gamePad.getRightBumper()){climb=false;}
-    if(climb){
-      //climb sequence goes here
-    }
   }
 
   /** This function is called once when the robot is disabled. */
@@ -367,7 +320,7 @@ pressedLeftStick = true;
     three.setSelectedSensorPosition(1024.0/4.0);
     four.setSelectedSensorPosition(1024.0/4.0);
     navX.zeroYaw();
-    }    */
+    }    
     swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
     swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
 
@@ -377,7 +330,7 @@ pressedLeftStick = true;
     if(gamePad.getRightBumperPressed()) {
       three.setSelectedSensorPosition(-1024.0/4.0);
     }
-
+*/
     SmartDashboard.putNumber("distance", falcRight.getSelectedSensorPosition());
     falcRight.set(TalonFXControlMode.PercentOutput, gamePad.getRightTriggerAxis()*.3);
     falcLeft.set(TalonFXControlMode.PercentOutput, gamePad.getRightTriggerAxis()*.3);
