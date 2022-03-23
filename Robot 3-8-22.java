@@ -19,13 +19,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
-import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.motorcontrol.Victor;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.NetworkTable;
@@ -37,16 +35,6 @@ import com.kauailabs.navx.frc.AHRS;
 import org.ejml.simple.SimpleSparseOperations;
 
 import frc.robot.SwerveAngle;
-import frc.robot.Climb;
-
-import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.Servo;
-
-import com.revrobotics.ColorSensorV3;
-import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
-import com.revrobotics.ColorMatchResult;
-import com.revrobotics.ColorMatch;
-import edu.wpi.first.wpilibj.util.Color;
 
 
   
@@ -59,22 +47,18 @@ import edu.wpi.first.wpilibj.util.Color;
  */
 public class Robot extends TimedRobot {
 
-  //TalonSRX one = new TalonSRX(1);
+  TalonSRX one = new TalonSRX(1);
   public static TalonSRX two = new TalonSRX(2);
   public static TalonSRX three = new TalonSRX(3);
-  //TalonSRX four = new TalonSRX(4);
-  TalonFX falcRight = new TalonFX(6); //switched from 5 to 6, 3/20/22
-  TalonFX falcLeft = new TalonFX(5); //switched from 6 to 5, 3/20/22
-  TalonFX falcShooter1 = new TalonFX(7);
-  TalonFX falcShooter2 = new TalonFX(8);
-  VictorSPX feederMotor = new VictorSPX(9);
-  VictorSPX intakeMotor = new VictorSPX(10);
+  TalonSRX four = new TalonSRX(4);
+  TalonFX falcRight = new TalonFX(5);
+  TalonFX falcLeft = new TalonFX(6);
+  TalonFX shooter1 = new TalonFX(7);
+  TalonFX shooter2 = new TalonFX(8);
+  VictorSPX feeder = new VictorSPX(9);
+  VictorSPX intake = new VictorSPX(10);
   TalonFX climb1 = new TalonFX(11);
   TalonFX climb2 = new TalonFX(12);
-
-  Servo test = new Servo(6);
-
-  Climb climb = new Climb();
   
   public static XboxController gamePad = new XboxController(0);
 
@@ -103,15 +87,15 @@ public class Robot extends TimedRobot {
   NetworkTableEntry ty = table.getEntry("ty");
   NetworkTableEntry tv = table.getEntry("tv");
   NetworkTableEntry ta = table.getEntry("ta");
-  public double distancefromtape = 13.5;
+  public double distancefromtape = 23.5;
 
   private PIDController pidLimeX = new PIDController(0.04, 0.0, 0.0);
-  private PIDController pidLimeY = new PIDController(0.02, 0.0005, 0.0);
+  private PIDController pidLimeY = new PIDController(0.02, 0.00, 0.0);
   private PIDController pidFalcLeftDistance = new PIDController(0.00003, 0.0, 0.0);
   private PIDController pidFalcRightDistance = new PIDController(0.00003, 0.0, 0.0);
 
   public boolean readytoshoot = false;
-  public static boolean climbBool = false;
+  boolean climb = false;
 
   double stickLength;
 
@@ -124,58 +108,6 @@ public class Robot extends TimedRobot {
   double  a = 90;
   double b;
 
-  private final I2C.Port i2cPort1 = I2C.Port.kOnboard;
-private final I2C.Port i2cPort2 = I2C.Port.kMXP;
-
-/**
- * A Rev Color Sensor V3 object is constructed with an I2C port as a 
- * parameter. The device will be automatically initialized with default 
- * parameters.
- */
-private final ColorSensorV3 m_colorSensor1 = new ColorSensorV3(i2cPort1);
-private final ColorSensorV3 m_colorSensor2 = new ColorSensorV3(i2cPort2);
-
-/**
- * A Rev Color Match object is used to register and detect known colors. This can 
- * be calibrated ahead of time or during operation.
- * 
- * This object uses a simple euclidian distance to estimate the closest match
- * with given confidence range.
- */
-private final ColorMatch m_colorMatcher1 = new ColorMatch();
-private final ColorMatch m_colorMatcher2 = new ColorMatch();
-
-/**
- * Note: Any example colors should be calibrated as the user needs, these
- * are here as a basic example.
- */
- private final Color kBlueTarget = new Color(0.156, 0.406, 0.432);
-                 /*3 inches away, light on: (0.22,0.453,0.343)
-                 //3 inches away, light off:(0.28,0.463,0.232)
-                 //6 inches away, light on:(0.256,0.476,0.265)
-                 //6 inches away, light off:(0..31,0.464,0.235)*/
-private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
-                 /*3 inches away, light on: (0.385,0.425,0.191)
-                 //3 inches away, light off:(0.309,0.466,0.221)
-                 //6 inches away, light on:(0.249,0.475,0.271)
-                 //6 inches away, light off:(0.30,0.465,0.229)*/     
-  public boolean ball_in_low;
-  public boolean ball_in_high;
-  public boolean intake;
-  public boolean shoot;
-  public boolean feederBool;
-  public boolean feederSmartDash;
-  public boolean readyToShoot;
-  Timer timer1 = new Timer();
-  Timer timer2 = new Timer();
-  public double intakeValue;
-  public double shootMotor;
-  public double feederValue;
-  public double shooterSpeed;
-  public double shooter2SmartDash;
-  public double wheeloffsetleft;
-  public double wheeloffsetright;
-
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -185,9 +117,9 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
-    falcShooter2.setInverted(true); //furiosa only
-    climb2.setInverted(true); //furiosa only
-    //three.setInverted(true);//furiosa only
+
+    
+    
   }
 
   /**
@@ -219,6 +151,8 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
     falcLeft.setSelectedSensorPosition(0);
 
     navX.zeroYaw();
+
+    
   }
 
   /** This function is called periodically during autonomous. */
@@ -227,14 +161,14 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
     double xlime = tx.getDouble(0.0);
     double ylime = ty.getDouble(0.0);
     double vlime = tv.getDouble(0.0);
-    /*SmartDashboard.putNumber("limelightx", xlime);
+    SmartDashboard.putNumber("limelightx", xlime);
     SmartDashboard.putNumber("limelighty", ylime);
     SmartDashboard.putNumber("valid target", xlime);
     SmartDashboard.putBoolean("ready to shoot?", readytoshoot);
     SmartDashboard.putNumber("error pid lime x", pidLimeX.getPositionError());
-    SmartDashboard.putNumber("error pid lime y", pidLimeY.getPositionError());*/
+    SmartDashboard.putNumber("error pid lime y", pidLimeY.getPositionError());
 
-    if(vlime == 1){
+    if(vlime == /*1 THIS WAS DANTE*/ 0){
       falcLeft.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4)+ (pidLimeX.calculate(xlime,0)*-0.4));
       falcRight.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4) + (pidLimeX.calculate(xlime,0)*0.4));
     } else{
@@ -254,7 +188,7 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
   falcRight.set(ControlMode.PercentOutput,pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(),40000));
 
     //Dante
-    /*rawAngle = two.getSelectedSensorPosition()*360/1024;
+    rawAngle = two.getSelectedSensorPosition()*360/1024;
     if (rawAngle >= 0 ){tempAngle = rawAngle % 360;}
       else{tempAngle = 360 - (rawAngle%360);}
 
@@ -278,7 +212,7 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
       if (gamePad.getLeftX() >= 0 && (-gamePad.getLeftY()) < 0){ b = 270 -360/(2*Math.PI)*Math.atan(gamePad.getLeftX()/(-gamePad.getLeftY()));}
 
       if (b <=  180){stickDegree = b;}
-      else{stickDegree = -360 + b;}*/
+      else{stickDegree = -360 + b;}
   }
 
   /** This function is called once when teleop is enabled. */
@@ -295,75 +229,27 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
     currentAngleWrapped = 0;
 
     navX.zeroYaw();
-    test.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
 
-    //intakeValue = 0.3;
-    //feederValue = 0;
-    shootMotor = 0;
-    shooter2SmartDash = 0;
-    shooterSpeed = 0;
-
-    ball_in_low=false;
-    ball_in_high =false;
-    intake=false;
-    shoot=false;
-    feederBool=false;
-
-    timer1.reset();
-    timer2.reset();
-
-    three.setSelectedSensorPosition(-1024.0/4.0);
-    two.setSelectedSensorPosition(-1024.0/4.0);
+    
 
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    SmartDashboard.putNumber("timer1", timer1.get());
-    SmartDashboard.putNumber("timer2", timer2.get());
-    SmartDashboard.putBoolean("feederBool", feederBool);
-    SmartDashboard.putNumber("error lime y", pidLimeY.getPositionError());
-    SmartDashboard.putBoolean("ready to shoot", readytoshoot);
-    SmartDashboard.putBoolean("shoot", shoot);
-    SmartDashboard.putBoolean("intake", intake);
-    SmartDashboard.putNumber("inakeMotor", intakeValue);
-    SmartDashboard.putNumber("feederValue", feederValue);
-    /*SmartDashboard.putNumber("shoot2Motor", shooter2SmartDash);
-    SmartDashboard.putNumber("shoot1Motor", shooterSpeed);*/
-    SmartDashboard.putBoolean("ball in low", ball_in_low);
-    SmartDashboard.putBoolean("ball in high", ball_in_high);
-    SmartDashboard.putNumber("proxy 1", m_colorSensor1.getProximity());
-    SmartDashboard.putNumber("proxy 2", m_colorSensor2.getProximity());
    SmartDashboard.putBoolean("pressedLeftStick", pressedLeftStick);
-   
-   double xlime = tx.getDouble(0.0);
-   double ylime = ty.getDouble(0.0);
-   double alime = ta.getDouble(0.0);
-   double vlime = tv.getDouble(0.0);
-   
-   if(pressedLeftStick=false){
+    if(pressedLeftStick=false){
       steadyHeading = navX.getYaw();
       SmartDashboard.putNumber("steadyHeading", steadyHeading);
       SmartDashboard.putNumber("navXgetYaw", navX.getYaw());
     }
 
-    if(gamePad.getStartButton()) {
-      shoot = false;
-      intake = false;
-      feederBool = false;
-
-      ball_in_low = false;
-      ball_in_high = false;
-    }
-   
     stickLength = Math.sqrt((gamePad.getLeftX() * gamePad.getLeftX()) + (gamePad.getLeftY() * gamePad.getLeftY()));
 
-    if (!shoot){
     if(gamePad.getLeftX() >= 0.1 || gamePad.getLeftX() <= -0.1 ||  gamePad.getLeftY() >=0.1 || gamePad.getLeftY() <=-0.1) {
       //SwerveAngle.navTog = true;
 
-      /*SmartDashboard.putNumber("Degrees", Math.toDegrees(Math.atan2(-gamePad.getLeftY(), gamePad.getLeftX()))+180.0);
+      SmartDashboard.putNumber("Degrees", Math.toDegrees(Math.atan2(-gamePad.getLeftY(), gamePad.getLeftX()))+180.0);
       SmartDashboard.putNumber("Left X", gamePad.getLeftX());
       SmartDashboard.putNumber("Left Y", gamePad.getLeftY());
       SmartDashboard.putNumber("Right X", gamePad.getRightX());
@@ -372,7 +258,8 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
       SmartDashboard.putNumber("Encoder Two", two.getSelectedSensorPosition());
       SmartDashboard.putNumber("Encoder Three", three.getSelectedSensorPosition());
       
-      */
+      swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
+      swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
 
       //if((gamePad.getRightX() >= 0.1 || gamePad.getRightX() <= -0.1) /*&& (gamePad.getLeftX() < 0.1 && gamePad.getLeftX() > -0.1 &&  gamePad.getLeftY() <0.1 && gamePad.getLeftY() >-0.1) */  ) { //Test if Right stick is being touched and the Left stick is not being touched
         
@@ -399,13 +286,9 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
           falcLeft.set(TalonFXControlMode.PercentOutput, 0);
           falcRight.set(TalonFXControlMode.PercentOutput, 0);
         }
-        swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-        swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
         //}
       swerveAngleRight.rotateCalc(swerveAngleLeft);
       swerveAngleRight.rotateCalc(swerveAngleRight);
-
-      
       
 //if(gamePad.getRightY() >= 0.1 || gamePad.getRightY() <= -0.1) {
       //swerveAngleRight.calc(gamePad.getRightX(), gamePad.getRightY(), three, navX);
@@ -425,15 +308,14 @@ pressedLeftStick = true;
 
       pressedLeftStick=false;
     }
-  }
-    /*if(gamePad.getAButtonPressed()) {
+    if(gamePad.getAButtonPressed()) {
       SwerveAngle.navTog = !SwerveAngle.navTog;
-    }*/ 
+    } 
     SmartDashboard.putBoolean("Field Oriented Control?", SwerveAngle.navTog);
 
-    /* if (gamePad.getXButton()) {
+     if (gamePad.getXButton()) {
       navX.zeroYaw();
-    }*/
+    }
     SmartDashboard.putBoolean("Shooting", shooting);
     if (gamePad.getYButtonPressed()){
       shootTimer.reset();
@@ -441,7 +323,7 @@ pressedLeftStick = true;
       shooting = true;
     }
 
-    /*if (shooting && shootTimer.get()<0.5){
+    if (shooting && shootTimer.get()<0.5){
       shooter1.set(TalonFXControlMode.PercentOutput, 0.5);
       shooter2.set(TalonFXControlMode.PercentOutput, 0.5);
    } else if (shooting && shootTimer.get()<0.8){
@@ -450,144 +332,14 @@ pressedLeftStick = true;
     feeder.set(ControlMode.PercentOutput, 0.4);
    } else if (shooting){
       shooting = false;
-    }*/
+    }
 
-    SmartDashboard.putBoolean("climb", climbBool);
-    if(gamePad.getBackButton() && gamePad.getStartButton()) {
-      climbBool = true;
-      climb.start();
-    }
-    if(gamePad.getLeftBumper() && gamePad.getRightBumper()) {
-      climbBool=false;
-    }
-    if(gamePad.getYButton()) {
-      test.setSpeed(1.0);
-    }
-    /*if(climbBool){
+    SmartDashboard.putBoolean("climb", climb);
+    if(gamePad.getBackButton() && gamePad.getStartButton()){climb=true;}
+    if(gamePad.getLeftBumper() && gamePad.getRightBumper()){climb=false;}
+    if(climb){
       //climb sequence goes here
-      climb1.set(TalonFXControlMode.PercentOutput, 0.14);
-      climb2.set(TalonFXControlMode.PercentOutput, 0.14);
-    } else{
-      climb1.set(TalonFXControlMode.PercentOutput, 0.0);
-      climb2.set(TalonFXControlMode.PercentOutput, 0.0);
-    }*/
-    if(gamePad.getXButtonPressed()){intake=true; }
-    if(gamePad.getAButtonPressed()){shoot=true;}
-    if(m_colorSensor1.getProximity() > 175.0){ball_in_low=true;} else{ball_in_low=false;}
-    if(m_colorSensor2.getProximity() > 130.0){ball_in_high=true;} else{ball_in_high=false;}
-    /*if(intake){
-      if(!ball_in_high){
-       intakeValue = 0.5;
-       feederValue = 0.5;
-      } else if(!ball_in_low){
-       intakeValue = 0.5;
-       feederValue = 0;
-      } else{
-       intakeValue = 0;
-       feederValue = 0;
-       intake = false;
-      }
-    }*/
-    if(intake){
-     if(ball_in_low == false){
-      intakeValue = 1;
-       intakeMotor.set(VictorSPXControlMode.PercentOutput, intakeValue);
-      } else {
-       feederBool=true;
-       intake=false;
-       //System.out.println("Ball in low"); // vibrate controller?
-       gamePad.setRumble(RumbleType.kLeftRumble, 0.5); //Vibrate controller B-)
-       intakeMotor.set(VictorSPXControlMode.PercentOutput, 0.0);
-      }
-    } else { 
-      intakeMotor.set(VictorSPXControlMode.PercentOutput, 0.0);
     }
-    if(feederBool){
-     if(ball_in_low && ball_in_high == false){
-      intakeValue = 1;
-      feederValue = 0.5;
-      intakeMotor.set(VictorSPXControlMode.PercentOutput, intakeValue);
-      feederMotor.set(VictorSPXControlMode.PercentOutput, feederValue);
-     }
-     if(ball_in_low == false && ball_in_high == false){
-      feederValue = 0.5;
-      feederMotor.set(VictorSPXControlMode.PercentOutput, feederValue);
-     }
-     if(ball_in_high){
-      //System.out.println("Ball in high"); // vibrate controller? 
-      gamePad.setRumble(RumbleType.kRightRumble, 0.5); //Vibrate controller B-)
-      feederBool =false;
-      feederMotor.set(VictorSPXControlMode.PercentOutput, 0.0);
-      intakeMotor.set(VictorSPXControlMode.PercentOutput, 0.0);
-     }
-    } /*else {
-      feederMotor.set(VictorSPXControlMode.PercentOutput, 0.0);
-    }*/
-    
-    if(shoot){
-     /*if(vlime == 1 && !readytoshoot){
-       falcLeft.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4)+ (pidLimeX.calculate(xlime,0)*-0.4));
-       falcRight.set(TalonFXControlMode.PercentOutput, (pidLimeY.calculate(ylime,distancefromtape)*0.4) + (pidLimeX.calculate(xlime,0)*0.4));
-     } //else{shoot=false;}
-    
-     if(pidLimeY.getPositionError() <= 8.2 && pidLimeY.getPositionError() >= -8.2 && pidLimeX.getPositionError() <= 4.0 && pidLimeX.getPositionError() >= -4.0) {
-       readytoshoot = true;
-     }else{
-       readytoshoot = false;
-     }*/
-
-     // 11 5 inc = -12.22
-
-     readytoshoot = true;
-     if(ball_in_high){ //timed sequence goes below here
-       //timer2.start();
-       timer1.start();
-      if(timer1.get()<0.5){
-        shooterSpeed = 1.0;
-       falcShooter1.set(TalonFXControlMode.PercentOutput, shooterSpeed);
-       falcShooter2.set(TalonFXControlMode.PercentOutput, shooterSpeed);
-      } else if (readytoshoot==false) {
-        shooterSpeed = 1.0;
-       falcShooter1.set(TalonFXControlMode.PercentOutput, shooterSpeed);
-       falcShooter2.set(TalonFXControlMode.PercentOutput, shooterSpeed);
-       /*timer2.reset();
-       timer2.stop();*/
-      } else if (ball_in_high && readytoshoot/*ball_in_low? timer2.get()<2.0: timer2.get()<1.0*/){
-       falcShooter1.set(TalonFXControlMode.PercentOutput, shooterSpeed);
-       falcShooter2.set(TalonFXControlMode.PercentOutput, shooterSpeed);
-       feederValue = 0.5;
-       feederMotor.set(VictorSPXControlMode.PercentOutput, feederValue);
-       /*shooterSpeed = 0.5;
-       shooter2SmartDash = 0.5;*/
-       
-      } else{
-       falcShooter1.set(TalonFXControlMode.PercentOutput, 0.0);
-       falcShooter2.set(TalonFXControlMode.PercentOutput, 0.0);
-       feederMotor.set(VictorSPXControlMode.PercentOutput, 0.0);
-       /*shooterSpeed = 0.0;
-       shooter2SmartDash = 0.0;
-       feederValue = 0.0;*/
-       timer1.stop();
-       timer2.stop();
-        timer2.reset();
-        timer1.reset();
-        shoot=false;
-        readytoshoot = false;
-      } // ?and print something to terminal or dashboard?
-     }
-   } else {
-    falcShooter1.set(TalonFXControlMode.PercentOutput, 0.0);
-    falcShooter2.set(TalonFXControlMode.PercentOutput, 0.0);
-   }
-   if(gamePad.getBButton()) {
-     climb.servoBack();
-   }
-   if(gamePad.getYButton()) {
-     climb.servoMid();
-   }
-   if(gamePad.getLeftBumper()) {
-     climb.servoForward();
-   }
   }
 
   /** This function is called once when the robot is disabled. */

@@ -7,33 +7,35 @@ import edu.wpi.first.wpilibj.Servo;
 
 public class Climb {
 
-    TalonFX fxOne = new TalonFX(8);
-    TalonFX fxTwo = new TalonFX(9);
+    TalonFX fxOne = new TalonFX(11);
+    TalonFX fxTwo = new TalonFX(12);
 
-    Servo three = new Servo(4);
-    Servo four = new Servo(5);
+    Servo servo1 = new Servo(5);
+    //Servo servo2 = new Servo(6);
 
     public Climb() { //init
-        three.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
-        four.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
+        servo1.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
+        //servo2.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
 
     }
     
 
-    public void climb() {
-        extendMotors();
-        retractMotors();
-        servoBack();
-        extendMotors();
-        servoMid();
-        retractMotors();
-        servoBack();
-        extendMotors();
-        retractMotors();
-        servoBack();
-        extendMotors();
-        servoMid();
-        retractMotors();
+    public void start() {
+        if(Robot.climbBool) {
+            extendMotors();
+            retractMotors();
+            servoBack();
+            extendMotors();
+            servoMid();
+            retractMotors();
+            servoBack();
+            extendMotors();
+            retractMotors();
+            servoBack();
+            extendMotors();
+            servoMid();
+            retractMotors();
+        }
 
     }
 
@@ -47,12 +49,15 @@ public class Climb {
     }
 
     public void servoBack() {
-        three.setSpeed(-1.0);
-        four.setSpeed(-1.0);
+        servo1.setSpeed(-1.0);
+        //four.setSpeed(-1.0);
     }
     public void servoMid() {
-        three.setSpeed(1.0);
-        four.setSpeed(1.0);
+        servo1.setSpeed(0);
+        //four.setSpeed(1.0);
+    }
+    public void servoForward() {
+        servo1.setSpeed(1.0);
     }
 
 }
