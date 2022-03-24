@@ -17,6 +17,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import java.net.NetworkInterface;
+import java.util.TimerTask;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
@@ -176,6 +179,10 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
   public double wheeloffsetleft;
   public double wheeloffsetright;
 
+  public double servoTestSpeed = 0.0;
+
+
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -250,8 +257,8 @@ private final Color kRedTarget =  new Color (0.455, 0.4, 0.1);
   //falcLeft.set(TalonFXControlMode.Position, 300);
   //falcRight.set(TalonFXControlMode.Position, 300);
   SmartDashboard.putNumber("falcRight.getSelectedSensorPosition()", falcRight.getSelectedSensorPosition());
-  falcLeft.set(ControlMode.PercentOutput,pidFalcLeftDistance.calculate(falcLeft.getSelectedSensorPosition(),40000)); // 36 inches * (10000/9)=40000
-  falcRight.set(ControlMode.PercentOutput,pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(),40000));
+  falcLeft.set(ControlMode.PercentOutput,pidFalcLeftDistance.calculate(falcLeft.getSelectedSensorPosition(),60000)); // 36 inches * (10000/9)=40000
+  falcRight.set(ControlMode.PercentOutput,pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(),60000));
 
     //Dante
     /*rawAngle = two.getSelectedSensorPosition()*360/1024;
@@ -472,7 +479,13 @@ pressedLeftStick = true;
       climb2.set(TalonFXControlMode.PercentOutput, 0.0);
     }*/
     if(gamePad.getXButtonPressed()){intake=true; }
-    if(gamePad.getAButtonPressed()){shoot=true;}
+    if(gamePad.getAButtonPressed()){
+      shoot=true;
+      NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(3);
+    }
+    if(!shoot) {
+      NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(0);
+    }
     if(m_colorSensor1.getProximity() > 175.0){ball_in_low=true;} else{ball_in_low=false;}
     if(m_colorSensor2.getProximity() > 130.0){ball_in_high=true;} else{ball_in_high=false;}
     /*if(intake){
@@ -579,15 +592,7 @@ pressedLeftStick = true;
     falcShooter1.set(TalonFXControlMode.PercentOutput, 0.0);
     falcShooter2.set(TalonFXControlMode.PercentOutput, 0.0);
    }
-   if(gamePad.getBButton()) {
-     climb.servoBack();
-   }
-   if(gamePad.getYButton()) {
-     climb.servoMid();
-   }
-   if(gamePad.getLeftBumper()) {
-     climb.servoForward();
-   }
+  
   }
 
   /** This function is called once when the robot is disabled. */
@@ -604,6 +609,9 @@ pressedLeftStick = true;
 
     falcRight.setSelectedSensorPosition(0);
     falcLeft.setSelectedSensorPosition(0);
+
+    servoTestSpeed = -1.0;
+
   }
 
   /** This function is called periodically during test mode. */
@@ -616,14 +624,39 @@ pressedLeftStick = true;
     four.setSelectedSensorPosition(1024.0/4.0);
     navX.zeroYaw();
     }    */
-    swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-    swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
+    /*java.util.Timer test5 = new java.util.Timer();
+    TimerTask servoForward = new TimerTask() {
+      public void run() {
+          System.out.println("joe mama");
+      }
+  };*/
+  if(gamePad.getAButton()) {
+    climb.servoForward();
+  }
+  if(gamePad.getBButton()) {
+    climb.servoMid();
+  }
+  if(gamePad.getXButton()) {
+    climb.servoLevel();
+  }
+  if(gamePad.getYButton()) {
+    climb.servoBack();
+  }
+
+  if(gamePad.getRightBumper()) {
+    climb.servo1.setSpeed(servoTestSpeed);
+    climb.servo2.setSpeed(servoTestSpeed);
+    servoTestSpeed += 0.1;
+  }
+  
+    //swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
+    //swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
 
     if(gamePad.getLeftBumperPressed()) { 
-      two.setSelectedSensorPosition(-1024.0/4.0);
+      //two.setSelectedSensorPosition(-1024.0/4.0);
     }
     if(gamePad.getRightBumperPressed()) {
-      three.setSelectedSensorPosition(-1024.0/4.0);
+      //three.setSelectedSensorPosition(-1024.0/4.0);
     }
 
     SmartDashboard.putNumber("distance", falcRight.getSelectedSensorPosition());

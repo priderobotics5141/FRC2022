@@ -1,5 +1,9 @@
 package frc.robot;
 
+import java.util.TimerTask;
+
+import edu.wpi.first.wpilibj.Timer;
+
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
@@ -7,22 +11,44 @@ import edu.wpi.first.wpilibj.Servo;
 
 public class Climb {
 
-    TalonFX fxOne = new TalonFX(11);
-    TalonFX fxTwo = new TalonFX(12);
+    TalonFX fx1 = new TalonFX(11);
+    TalonFX fx2 = new TalonFX(12);
 
     Servo servo1 = new Servo(5);
-    //Servo servo2 = new Servo(6);
+    Servo servo2 = new Servo(7);
+
+    Timer climbTime = new Timer();
 
     public Climb() { //init
         servo1.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
-        //servo2.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
+        servo2.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
 
     }
     
 
     public void start() {
         if(Robot.climbBool) {
-            extendMotors();
+
+           // ArrayList times = new ArrayList<Double>;
+
+           if(climbTime.get() > 0 && climbTime.get() <= 0) {
+               extendMotors();
+           }
+           if(climbTime.get() >= 1 && climbTime.get() <= 1.02) {
+
+           }
+
+            /*climbTime.schedule(extendMotors, 0);
+            climbTime.schedule(retractMotors, 2000);
+            climbTime.schedule(servoLevel, 2300);
+            climbTime.schedule(extendMotors, 2800);
+            climbTime.schedule(servoBack, 3000);
+            climbTime.schedule(servoForward, 5000);
+            climbTime.schedule(retractMotors, 5300);
+            climbTime.schedule(servoForward, 5400);
+            climbTime.schedule(servoLevel, 5700);*?
+
+            /*extendMotors();
             retractMotors();
             servoBack();
             extendMotors();
@@ -34,30 +60,74 @@ public class Climb {
             servoBack();
             extendMotors();
             servoMid();
-            retractMotors();
+            retractMotors();*/
         }
 
     }
+    /*TimerTask extendMotors = new TimerTask() {
+        public void run() {
+            fx1.set(TalonFXControlMode.Position, 100);
+            fx2.set(TalonFXControlMode.Position, 100);
+        }
+    }; TimerTask retractMotors = new TimerTask() {
+        public void run() {
+            fx1.set(TalonFXControlMode.Position, 0);
+            fx2.set(TalonFXControlMode.Position, 0);        
+        }
+    };
+    TimerTask servoBack = new TimerTask() {
+        public void run() {
+            servo1.setSpeed(1);
+            servo2.setSpeed(1);
+        }
+    }; TimerTask servoMid = new TimerTask() {
+        public void run() {
+            servo1.setSpeed(0);
+            servo2.setSpeed(0);        }
+    }; TimerTask servoLevel = new TimerTask() {
+        public void run() {
+            servo1.setSpeed(-0.2);
+            servo2.setSpeed(-0.2);
+        }
+    }; TimerTask servoForward = new TimerTask() {
+        public void run() {
+            servo1.setSpeed(-1.0);
+            servo2.setSpeed(-1.0);    
+        }
+    };*/
 
     public void extendMotors() {
-        fxOne.set(TalonFXControlMode.Position, 100);
-        fxTwo.set(TalonFXControlMode.Position, 100);
+        fx1.set(TalonFXControlMode.Position, 100);
+        fx2.set(TalonFXControlMode.Position, 100);
     }
     public void retractMotors() {
-        fxOne.set(TalonFXControlMode.Position, 0);
-        fxTwo.set(TalonFXControlMode.Position, 0);
+        fx1.set(TalonFXControlMode.Position, 0);
+        fx2.set(TalonFXControlMode.Position, 0);
+    }
+
+    public void setMotors(double value) {
+        fx1.set(TalonFXControlMode.Position, value);
+        fx2.set(TalonFXControlMode.Position, value);
     }
 
     public void servoBack() {
         servo1.setSpeed(-1.0);
-        //four.setSpeed(-1.0);
+        servo2.setSpeed(-1.0);
+    }
+    public void servoLevel() {
+        servo1.setSpeed(-0.2);
+        servo2.setSpeed(-0.2);
     }
     public void servoMid() {
-        servo1.setSpeed(0);
-        //four.setSpeed(1.0);
+        servo1.setSpeed(0.0);
+        servo2.setSpeed(0.0);
     }
     public void servoForward() {
         servo1.setSpeed(1.0);
+        servo2.setSpeed(1.0);
     }
+
+
+    
 
 }
