@@ -111,8 +111,8 @@ public class Robot extends TimedRobot {
 
   private PIDController pidLimeX = new PIDController(0.04, 0.0, 0.0);
   private PIDController pidLimeY = new PIDController(0.02, 0.0005, 0.0);
-  private PIDController pidFalcLeftDistance = new PIDController(0.0000016, 0.0, 0.0); //comp: 0.00002
-  private PIDController pidFalcRightDistance = new PIDController(0.000002, 0.0, 0.0);
+  private PIDController pidFalcLeftDistance = new PIDController(0.00002, 0.0, 0.0);
+  private PIDController pidFalcRightDistance = new PIDController(0.00002, 0.0, 0.0);
 
   public boolean readytoshoot = false;
   public static boolean climbBool = false;
@@ -342,9 +342,9 @@ public class Robot extends TimedRobot {
           System.out.println("if five");
           
           falcLeft.set(ControlMode.PercentOutput,
-          pidFalcLeftDistance.calculate(falcLeft.getSelectedSensorPosition(), -200000) * 0.7); // 36 inches * (10000/9)=40000
+          pidFalcLeftDistance.calculate(falcLeft.getSelectedSensorPosition(), -150000) * 0.7); // 36 inches * (10000/9)=40000
           falcRight.set(ControlMode.PercentOutput,
-          pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(), -200000) * 0.7);
+          pidFalcRightDistance.calculate(falcRight.getSelectedSensorPosition(), -150000) * 0.7);
           /*
            * shooterSpeed = 0.5;
            * shooter2SmartDash = 0.5;
@@ -480,15 +480,6 @@ public class Robot extends TimedRobot {
       SmartDashboard.putNumber("navXgetYaw", navX.getYaw());
     }*/
 
-    if (gamePad.getYButton()) 
-    {
-      climb1.set(TalonFXControlMode.PercentOutput, 0.8);
-      climb2.set(TalonFXControlMode.PercentOutput, 0.8);
-    } else 
-    {
-      climb1.set(TalonFXControlMode.PercentOutput, 0.0);
-      climb2.set(TalonFXControlMode.PercentOutput, 0.0);
-    }
     if (gamePad.getStartButton()) {
       shoot = false;
       intake = false;
@@ -582,14 +573,15 @@ public class Robot extends TimedRobot {
           falcLeft.set(TalonFXControlMode.PercentOutput,
               (throttle - /* Math.abs(SwerveAngle.multiplier) * */(m_RotateMultiplyer)));
         }
-        if (gamePad.getLeftX() > 0.1 || gamePad.getLeftY() <-0.1 || gamePad.getLeftY() > 0.1 || gamePad.getLeftX() < -0.1)  { 
-          swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-          swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
-        } else { // Not touching left stick causes swerve to face forward and right stick allows rotation
+        if (throttle == 0.0) 
+        { // Not touching throttle causes swerve to face forward and right stick allowsrotation
           two.set(ControlMode.MotionMagic, 1024 * swerveAngleLeft.angleWrapTimes - 256);
           three.set(ControlMode.MotionMagic, 1024 * swerveAngleLeft.angleWrapTimes - 256);
-          falcRight.set(TalonFXControlMode.PercentOutput, -gamePad.getRightX() * 0.4);
-          falcLeft.set(TalonFXControlMode.PercentOutput, gamePad.getRightX() * 0.4); // Toching throttle allows movement like normal
+          falcRight.set(TalonFXControlMode.PercentOutput, -gamePad.getRightX() * 0.6);
+          falcLeft.set(TalonFXControlMode.PercentOutput, gamePad.getRightX() * 0.6);
+        } else { // Toching throttle allows movement like normal
+          swerveAngleLeft.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
+          swerveAngleRight.calc(gamePad.getLeftX(), gamePad.getLeftY(), navX);
         }
         // } else {
         // System.out.println("Wheels stopped");
@@ -641,11 +633,11 @@ public class Robot extends TimedRobot {
      */
     SmartDashboard.putBoolean("Shooting", shooting);
     if (!climb.climbMode) {
-      //if (gamePad.getYButtonPressed()) {
-      //  shootTimer.reset();
-      //  shootTimer.start();
-      //  shooting = true;
-      //}
+      if (gamePad.getYButtonPressed()) {
+        shootTimer.reset();
+        shootTimer.start();
+        shooting = true;
+      }
     }
     if (gamePad.getRightBumper()) {
       falcShooter1.set(TalonFXControlMode.PercentOutput, 0.4);

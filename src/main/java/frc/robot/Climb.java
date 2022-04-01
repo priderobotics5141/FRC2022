@@ -3,7 +3,9 @@ package frc.robot;
 import java.util.TimerTask;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
@@ -11,13 +13,15 @@ import edu.wpi.first.wpilibj.Servo;
 
 public class Climb {
 
-    TalonFX fx1 = new TalonFX(11);
-    TalonFX fx2 = new TalonFX(12);
+    public TalonFX fx1 = new TalonFX(11);
+    public TalonFX fx2 = new TalonFX(12);
 
     Servo servo1 = new Servo(5);
     Servo servo2 = new Servo(7);
 
     Timer climbTime = new Timer();
+
+    public boolean climbMode;
 
     public Climb() { //init
         servo1.setBounds(2.0, 1.8, 1.5, 1.2, 1.0);
@@ -63,6 +67,33 @@ public class Climb {
             retractMotors();*/
         }
 
+    }
+    public void manualClimb() {
+        if(climbMode) {
+            if(Robot.gamePad.getAButton()) {
+                servoForward();
+              }
+              if(Robot.gamePad.getBButton()) {
+                servoMid();
+              }
+              if(Robot.gamePad.getXButton()) {
+                servoLevel();
+              }
+              if(Robot.gamePad.getYButton()) {
+                servoBack();
+              }
+              if(Robot.gamePad.getRightTriggerAxis() > 0.0) 
+              {
+                fx1.set(ControlMode.PercentOutput, Robot.gamePad.getRightTriggerAxis() * 0.4);
+                fx2.set(ControlMode.PercentOutput, Robot.gamePad.getRightTriggerAxis() * 0.4);
+              } else 
+              {
+                fx1.set(ControlMode.PercentOutput, Robot.gamePad.getLeftTriggerAxis() * -0.4);
+              fx2.set(ControlMode.PercentOutput, Robot.gamePad.getLeftTriggerAxis() * -0.4);
+              }
+              
+
+        }
     }
     /*TimerTask extendMotors = new TimerTask() {
         public void run() {
